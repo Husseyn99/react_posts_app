@@ -1,0 +1,13 @@
+.post {
+  width: 800px;
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid green;
+  margin-top: 15px;
+  padding: 10px 15px;
+}
+/*# sourceMappingURL=PostItem.module.css.map */
+
+.content {
+ 
+}
