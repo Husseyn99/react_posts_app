@@ -13,20 +13,28 @@ import PostList from "./components/posts/PostList";
 import PostForm from "./components/posts/PostForm";
 import PostFilter from "./components/posts/PostFilter";
 
+import { pageCount } from "./utils/pages";
+import { usePagination } from "./hooks/usePagination";
+
 import "./App.css";
 
 function App() {
   const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState({ sort: "", query: "" });
   const [modal, setModal] = useState(false);
+  const [totalPage, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10);
+  const [page, setPage] = useState(1);
+  const pagesArray = usePagination(totalPage);
   const sortedAndSearchedPosts = useSortedAndSearchedPosts(
     posts,
     filter.sort,
     filter.query
   );
   const [fetchPosts, isPostsLoading, error] = useFetching(async () => {
-    const posts = await PostService.getAll();
-    setPosts(posts);
+    const posts = await PostService.getAll(limit, page);
+    setTotalPages(pageCount(posts.headers["x-total-count"], limit));
+    setPosts(posts.data);
   });
 
   const createPost = (newPost) => {
@@ -40,8 +48,8 @@ function App() {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
- 
+  }, [page]);
+
   return (
     <div style={{ width: "41%" }}>
       <Button style={{ marginTop: "30px" }} onClick={() => setModal(true)}>
@@ -71,6 +79,21 @@ function App() {
           title="Посты про Js"
         />
       )}
+      <div>
+        {pagesArray.map((p) => {
+          return (
+            <button
+              key={p}
+              className={
+                page === p ? "page__button page__current" : "page__button"
+              }
+              onClick={() => setPage(p)}
+            >
+              {p}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

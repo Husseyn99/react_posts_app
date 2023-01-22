@@ -5,8 +5,8 @@
 }
 
 #root {
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center;
 }
 
 .post-enter {
@@ -23,4 +23,22 @@
 .post-exit-active {
   transform: translateX(-350px);
   transition: all 500ms ease-in;
+}
+
+.page__button {
+  padding: 5px 10px;
+  background-color: inherit;
+  border: 1px solid green;
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+.page__button:hover {
+  background-color: green;
+  color: white;
+}
+
+.page__current {
+  border: 2px solid orange;
+  font-weight: bold;
 }
