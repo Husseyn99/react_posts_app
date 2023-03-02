@@ -1,19 +1,42 @@
-import React from "react";
-import { Route, Routes } from "react-router-dom";
+import React, { useContext } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import About from "../pages/About";
-import NotFound from "../pages/NotFound";
-import Posts from "../pages/Posts";
-import PostIdPage from "./posts/PostIdPage";
+import Loader from "./UI/Loader/Loader";
+
+import { AuthContext } from "../context";
+
+import { publicRoutes, privateRoutes } from "./routes";
 
 const AppRouter = () => {
+  const { isAuth, isLoading } = useContext(AuthContext);
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
   return (
     <Routes>
-      <Route path="/" element={<Posts />} />
-      <Route exact path="/posts" element={<Posts />} />
-      <Route exact path="/posts/:id" element={<PostIdPage />} />
-      <Route path="about" element={<About />} />
-      <Route path="*" element={<NotFound />} />
+      {isAuth
+        ? privateRoutes.map((route) => (
+            <React.Fragment key={route.path}>
+              <Route
+                key={route.path}
+                path={route.path}
+                element={route.component}
+              />
+              <Route path="*" element={<Navigate to="/posts" replace />} />
+            </React.Fragment>
+          ))
+        : publicRoutes.map((route) => (
+            <React.Fragment key={route.path}>
+              <Route
+                key={route.path}
+                path={route.path}
+                element={route.component}
+              />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </React.Fragment>
+          ))}
     </Routes>
   );
 };
