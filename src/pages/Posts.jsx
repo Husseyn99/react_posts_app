@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useSortedAndSearchedPosts } from "../hooks/usePosts";
 import { useFetching } from "../hooks/useFetching";
+import { useObserver } from "../hooks/useObserver";
 
 import { pageCount } from "../utils/pages";
 
@@ -13,6 +14,7 @@ import Modal from "../components/UI/Modal/Modal";
 import Button from "../components/UI/Button/Button";
 import Loader from "../components/UI/Loader/Loader";
 import Pagination from "../components/UI/Pagination/Pagination";
+import Select from "../components/UI/Select/Select";
 
 import PostService from "../API/PostService";
 
@@ -23,15 +25,21 @@ function Posts() {
   const [totalPage, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(1);
+  const lastElement = useRef();
+
   const sortedAndSearchedPosts = useSortedAndSearchedPosts(
     posts,
     filter.sort,
     filter.query
   );
   const [fetchPosts, isPostsLoading, error] = useFetching(async () => {
-    const posts = await PostService.getAll(limit, page);
-    setTotalPages(pageCount(posts.headers["x-total-count"], limit));
-    setPosts(posts.data);
+    const res = await PostService.getAll(limit, page);
+    setTotalPages(pageCount(res.headers["x-total-count"], limit));
+    setPosts([...posts, ...res.data]);
+  });
+
+  useObserver(lastElement, page < totalPage, isPostsLoading, () => {
+    setPage(page + 1);
   });
 
   const createPost = (newPost) => {
@@ -45,7 +53,7 @@ function Posts() {
 
   useEffect(() => {
     fetchPosts();
-  }, [page]);
+  }, [page, limit]);
 
   return (
     <div style={{ width: "41%" }}>
@@ -58,8 +66,27 @@ function Posts() {
 
       <hr style={{ margin: "10px 0" }} />
       <PostFilter filter={filter} setFilter={setFilter} />
+      <Select
+        option={[
+          { value: 5, name: "5" },
+          { value: 10, name: "10" },
+          { value: 15, name: "15" },
+          { value: -1, name: "Показать все" },
+        ]}
+        defaultValue={"Количество постов на странице"}
+        value={limit}
+        onChange={(value) => {
+          setLimit(value);
+        }}
+      />
       {error && <h1>Произошла ошибка {error}</h1>}
-      {isPostsLoading ? (
+      <PostList
+        deletePost={deletePost}
+        posts={sortedAndSearchedPosts}
+        title="Посты про Js"
+      />
+      <div ref={lastElement} style={{ height: 20 }}></div>
+      {isPostsLoading && (
         <div
           style={{
             display: "flex",
@@ -69,13 +96,8 @@ function Posts() {
         >
           <Loader />
         </div>
-      ) : (
-        <PostList
-          deletePost={deletePost}
-          posts={sortedAndSearchedPosts}
-          title="Посты про Js"
-        />
       )}
+
       <Pagination totalPage={totalPage} page={page} setPage={setPage} />
     </div>
   );
